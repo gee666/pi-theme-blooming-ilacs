@@ -21,7 +21,7 @@
     "stringGold": "#D0BA71",
     "orange": "#EA9152",
     "green": "#C7E7BC",
-    "red": "#ea2121"
+    "red": "#CC3950"
   },
   "colors": {
     "accent": "pink",
@@ -40,15 +40,15 @@
     "scrollbarThumb": "brownAccent",
     "searchMatchBg": "brownAccent",
     "searchMatchText": "pinkBright",
-    "userMessageBg": "#1E1814",
+    "userMessageBg": "#6E452F",
     "userMessageText": "mainText",
     "customMessageBg": "#1E1814",
     "customMessageText": "mainText",
     "customMessageLabel": "pinkBright",
-    "toolPendingBg": "brown",
-    "toolSuccessBg": "#443B31",
-    "toolErrorBg": "#824545",
-    "toolTitle": "#FFD0AA",
+    "toolPendingBg": "#47382F",
+    "toolSuccessBg": "#2E2323",
+    "toolErrorBg": "#4A2028",
+    "toolTitle": "#EBB496",
     "toolOutput": "mainText",
 
     "mdHeading": "pinkBright",
