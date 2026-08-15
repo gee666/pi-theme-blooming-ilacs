@@ -37,6 +37,9 @@
     "thinkingText": "mutedText",
 
     "selectedBg": "#3E3129",
+    "scrollbarThumb": "brownAccent",
+    "searchMatchBg": "brownAccent",
+    "searchMatchText": "pinkBright",
     "userMessageBg": "#1E1814",
     "userMessageText": "mainText",
     "customMessageBg": "#1E1814",
@@ -79,6 +82,7 @@
     "thinkingMedium": "pinkSoft",
     "thinkingHigh": "pinkBright",
     "thinkingXhigh": "pink",
+    "thinkingMax": "pinkBright",
 
     "bashMode": "orange"
   },
