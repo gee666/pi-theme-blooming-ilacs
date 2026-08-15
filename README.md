@@ -1,14 +1,27 @@
 # pi-theme-blooming-ilacs
 
-Blooming Ilacs theme for pi.
+Blooming Ilacs theme for Pi.
 
 ## Install
 
-Copy the theme JSON into your pi themes directory:
+Install the theme as a Git-backed Pi package:
 
 ```bash
-mkdir -p ~/.pi/agent/themes
-cp blooming-ilacs-pi.json ~/.pi/agent/themes/
+pi install https://github.com/gee666/pi-theme-blooming-ilacs.git
 ```
 
-Then select `blooming-ilacs-pi` from pi's theme settings.
+Then select `blooming-ilacs-pi` from Pi's theme settings.
+
+## Update
+
+Update installed Pi packages, including this theme:
+
+```bash
+pi update --extensions
+```
+
+## Remove
+
+```bash
+pi remove https://github.com/gee666/pi-theme-blooming-ilacs.git
+```
