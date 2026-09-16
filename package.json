@@ -2,10 +2,12 @@
   "name": "pi-theme-blooming-ilacs",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Blooming Ilacs theme for Pi",
   "keywords": [
     "pi-package",
-    "pi-theme"
+    "pi-theme",
+    "pi-extension"
   ],
   "repository": {
     "type": "git",
@@ -14,6 +16,20 @@
   "pi": {
     "themes": [
       "./blooming-ilacs-pi.json"
+    ],
+    "extensions": [
+      "./extensions/blooming-ilacs-background.ts"
     ]
+  },
+  "files": [
+    "blooming-ilacs-pi.json",
+    "extensions",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
