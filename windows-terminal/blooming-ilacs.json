@@ -1,0 +1,23 @@
+{
+  "name": "Blooming Ilacs",
+  "background": "#111111",
+  "foreground": "#BDAE9D",
+  "cursorColor": "#EA2175",
+  "selectionBackground": "#3E3129",
+  "black": "#111111",
+  "red": "#CC3950",
+  "green": "#C7E7BC",
+  "yellow": "#D0BA71",
+  "blue": "#825E45",
+  "purple": "#C94EC7",
+  "cyan": "#DB779A",
+  "white": "#BDAE9D",
+  "brightBlack": "#746358",
+  "brightRed": "#FF6098",
+  "brightGreen": "#C7E7BC",
+  "brightYellow": "#FFDC68",
+  "brightBlue": "#BD976B",
+  "brightPurple": "#FE96ED",
+  "brightCyan": "#FE9CDA",
+  "brightWhite": "#BDAE9D"
+}

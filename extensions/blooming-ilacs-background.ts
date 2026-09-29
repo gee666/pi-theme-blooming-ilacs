@@ -1,14 +1,11 @@
 import { readFileSync } from "node:fs";
-import { watchFile, unwatchFile } from "node:fs";
-import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { getAgentDir } from "@earendil-works/pi-coding-agent";
 
 // Pi themes only colour the characters it draws itself; the terminal's own
 // default background stays whatever the emulator is configured with, so the
-// gaps around Pi's output keep showing the Ubuntu terminal background.
+// gaps around Pi's output keep showing the terminal's configured background.
 // The theme cannot express that, so this extension paints the terminal
 // itself with OSC 10/11/12 (foreground / background / cursor) whenever the
 // Blooming Ilacs theme is the active one, and resets it with OSC 110/111/112
@@ -18,14 +15,16 @@ const THEME_NAME = "blooming-ilacs-pi";
 const THEME_FILE = "blooming-ilacs-pi.json";
 
 const OSC = "\x1b]";
-const BEL = "\x07";
+const ST = "\x1b\\";
 
-const SET_FOREGROUND = (color: string) => `${OSC}10;${color}${BEL}`;
-const SET_BACKGROUND = (color: string) => `${OSC}11;${color}${BEL}`;
-const SET_CURSOR = (color: string) => `${OSC}12;${color}${BEL}`;
-const RESET_FOREGROUND = `${OSC}110${BEL}`;
-const RESET_BACKGROUND = `${OSC}111${BEL}`;
-const RESET_CURSOR = `${OSC}112${BEL}`;
+// Use the X11 RGB form and explicit string terminator for terminal OSCs.
+const rgb = (color: string) => `rgb:${color.slice(1, 3)}/${color.slice(3, 5)}/${color.slice(5, 7)}`;
+const SET_FOREGROUND = (color: string) => `${OSC}10;${rgb(color)}${ST}`;
+const SET_BACKGROUND = (color: string) => `${OSC}11;${rgb(color)}${ST}`;
+const SET_CURSOR = (color: string) => `${OSC}12;${rgb(color)}${ST}`;
+const RESET_FOREGROUND = `${OSC}110${ST}`;
+const RESET_BACKGROUND = `${OSC}111${ST}`;
+const RESET_CURSOR = `${OSC}112${ST}`;
 
 interface ThemeJson {
   vars?: Record<string, string>;
@@ -42,9 +41,8 @@ interface TerminalColors {
 // Theme values may be a literal "#rrggbb" or the name of an entry in "vars".
 function resolveColor(theme: ThemeJson, value: string | undefined): string | undefined {
   if (!value) return undefined;
-  if (value.startsWith("#")) return value;
-  const resolved = theme.vars?.[value];
-  return resolved?.startsWith("#") ? resolved : undefined;
+  const resolved = value.startsWith("#") ? value : theme.vars?.[value];
+  return resolved && /^#[0-9a-f]{6}$/i.test(resolved) ? resolved : undefined;
 }
 
 function readThemeColors(): TerminalColors | undefined {
@@ -64,20 +62,10 @@ function readThemeColors(): TerminalColors | undefined {
   }
 }
 
-function activeThemeName(): string | undefined {
-  try {
-    const settingsPath = join(getAgentDir(), "settings.json");
-    const settings = JSON.parse(readFileSync(settingsPath, "utf8")) as { theme?: string };
-    return settings.theme;
-  } catch {
-    return undefined;
-  }
-}
-
 export default function bloomingIlacsBackground(pi: ExtensionAPI) {
   const colors = readThemeColors();
-  const settingsPath = join(getAgentDir(), "settings.json");
   let applied = false;
+  let timer: ReturnType<typeof setInterval> | undefined;
 
   const write = (data: string) => {
     if (!process.stdout.isTTY) return;
@@ -86,8 +74,8 @@ export default function bloomingIlacsBackground(pi: ExtensionAPI) {
 
   const apply = () => {
     if (applied || !colors) return;
-    applied = true;
     write(SET_BACKGROUND(colors.background) + SET_FOREGROUND(colors.foreground) + SET_CURSOR(colors.cursor));
+    applied = true;
   };
 
   const restore = () => {
@@ -96,28 +84,30 @@ export default function bloomingIlacsBackground(pi: ExtensionAPI) {
     write(RESET_BACKGROUND + RESET_FOREGROUND + RESET_CURSOR);
   };
 
-  const sync = () => {
-    if (activeThemeName() === THEME_NAME) apply();
-    else restore();
-  };
-
-  // `/theme` persists the choice to settings.json, so polling that file keeps
-  // the terminal colours in step with theme switches inside a running session.
-  watchFile(settingsPath, { interval: 1000 }, sync);
-
   const cleanup = () => {
-    unwatchFile(settingsPath, sync);
+    if (timer) clearInterval(timer);
+    timer = undefined;
+    process.off("exit", cleanup);
     restore();
   };
 
-  // Writes to a TTY are synchronous, so the reset still reaches the terminal
-  // from an "exit" listener. No signal listeners here: registering one would
-  // suppress Node's default termination behaviour for Pi itself.
-  process.once("exit", cleanup);
-
-  pi.on("session_shutdown", () => {
+  pi.on("session_start", (_event, ctx) => {
     cleanup();
+    // Do not write terminal controls in print/JSON/RPC mode. Older Pi versions
+    // expose hasUI but not mode, so keep that compatibility check too.
+    if (!ctx.hasUI || !process.stdout.isTTY || (ctx.mode && ctx.mode !== "tui")) return;
+
+    // Wait for Pi's terminal initialization, then follow the actual active
+    // theme. Saved settings miss project overrides, CLI choices and auto mode.
+    const sync = () => {
+      if (ctx.ui.theme.name === THEME_NAME) apply();
+      else restore();
+    };
+    sync();
+    timer = setInterval(sync, 250);
+    timer.unref();
+    process.once("exit", cleanup);
   });
 
-  sync();
+  pi.on("session_shutdown", cleanup);
 }

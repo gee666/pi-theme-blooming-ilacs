@@ -21,9 +21,13 @@
       "./extensions/blooming-ilacs-background.ts"
     ]
   },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  },
   "files": [
     "blooming-ilacs-pi.json",
     "extensions",
+    "windows-terminal",
     "README.md"
   ],
   "peerDependencies": {
