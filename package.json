@@ -22,12 +22,14 @@
     ]
   },
   "scripts": {
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs",
+    "configure:truecolor": "node scripts/configure-truecolor.mjs"
   },
   "files": [
     "blooming-ilacs-pi.json",
     "extensions",
     "windows-terminal",
+    "scripts",
     "README.md"
   ],
   "peerDependencies": {

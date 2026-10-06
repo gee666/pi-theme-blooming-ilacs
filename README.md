@@ -65,6 +65,46 @@ On current Pi versions you can instead merge `"terminal": { "trueColor": true }`
 into Pi's `settings.json`. Use this only in a truecolor-capable terminal. A Pi
 terminal setting takes precedence over the environment variable.
 
+### WSL text and panel colors
+
+Pi can render the same theme differently on Windows and WSL. On Windows it
+automatically enables truecolor. In WSL, `TERM=xterm-256color` without
+`COLORTERM=truecolor` or another recognized terminal hint selects 256-color
+mode. Pi then approximates every RGB text and panel color with a palette index.
+Changing OSC defaults or the Windows Terminal scheme does not fix those panels.
+
+In a truecolor-capable terminal, test from WSL with:
+
+```bash
+PI_TRUE_COLOR=1 pi
+```
+
+For a persistent fix on current Pi versions, merge this into Pi's settings:
+
+```json
+{
+  "terminal": {
+    "trueColor": true
+  }
+}
+```
+
+Or run the opt-in setup command from this package's directory:
+
+```bash
+npm run configure:truecolor -- ~/.pi/agent/settings.json
+```
+
+The command preserves other settings and writes through symlinks used to share
+settings with Windows. Close Pi before running it, then restart Pi. It does not
+run automatically on installation because not every WSL terminal supports RGB.
+To undo it, remove `terminal.trueColor` or set it to `"auto"`. A project
+`.pi/settings.json` override takes precedence over the user setting, and settings
+take precedence over `PI_TRUE_COLOR`.
+
+If colors still differ in Windows Terminal, apply the profile settings above to
+the WSL profile too, especially `adjustIndistinguishableColors: "never"`.
+
 ## Update
 
 Update installed Pi packages, including this theme:
@@ -76,8 +116,8 @@ pi update --extensions
 ## Tests
 
 Run `npm test` with Node.js 22.18 or newer. Tests cover the emitted colour
-sequences, active-theme changes, non-interactive modes, cleanup and the Windows
-Terminal scheme. Visual checks still need a real terminal: start Pi, switch
+sequences, active-theme changes, non-interactive modes, cleanup, the Windows
+Terminal scheme and the opt-in truecolor configuration command. Visual checks still need a real terminal: start Pi, switch
 away from and back to this theme, then exit and check that terminal defaults
 are restored.
 
