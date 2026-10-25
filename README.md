@@ -126,23 +126,20 @@ are restored.
 
 Only the latest stable `@earendil-works/pi-coding-agent` release is a test target. Older Pi versions are not part of the test policy. Before every release, resolve `@latest` again, rerun the checks below, and update this record with the exact version actually checked and any validation limits.
 
-Tested against Pi 1.4.0 using `@earendil-works/pi-coding-agent` on Node.js 24.16.0.
+Tested against Pi 1.4.0
 
-Automated checks cover the six mocked terminal/background tests, five truecolor configuration tests using temporary settings files, JavaScript syntax, strict extension typechecking against Pi 1.4.0's declarations, the theme JSON through Pi's actual schema validator and loader, and extension registration through Pi's actual extension loader. Typechecking skips dependency declaration checks. No interactive Pi session or real-terminal OSC/appearance check was run for this record; the manual checks above are still needed.
+Validation used `@earendil-works/pi-coding-agent` 1.4.0 on Node.js 24.16.0. Automated checks cover the six mocked terminal/background tests, five truecolor configuration tests using temporary settings files, JavaScript syntax, strict extension typechecking against Pi 1.4.0's declarations, the theme JSON through Pi's actual schema validator and loader, and extension registration through Pi's actual extension loader. Typechecking skips dependency declaration checks. No interactive Pi session or real-terminal OSC/appearance check was run for this record; the manual checks above are still needed.
 
 The peer dependency minimum is `>=1.4.0`, the version checked here, rather than an unbounded wildcard. That floor does not mean every later release has been tested. Only the latest stable release is a test target.
 
-Use Node.js 22.19 or newer for Pi 1.4.0 validation. Install the latest validation tools only under ignored `tmp/`, not as shipped runtime dependencies:
+Use Node.js 22.19 or newer for Pi 1.4.0 validation. `npm test` automatically installs the latest validation tools under ignored `tmp/`, validates Pi loading, runs strict extension typechecking, and then runs the unit tests. Nothing is installed as a shipped runtime dependency:
 
 ```sh
-npm install --prefix tmp/pi-validation --no-save --package-lock=false @earendil-works/pi-coding-agent@latest typescript@latest @types/node@latest
 npm test
 npm run check
-npm run typecheck
-npm run test:pi
 ```
 
-The validator refuses a cached Pi install that no longer matches npm's latest release. It needs registry access and uses Pi's internal validation entry points, which may change in a later release. No linter is configured.
+Use `npm run test:unit` for the dependency-free unit-only check. Both `npm test` and standalone `npm run test:pi` refresh the temporary install with `--ignore-scripts`; no manual setup is needed. Install and registry calls have timeouts and failures stop the check. The validator verifies the installed version against npm's latest release. These commands need registry access and use Pi's internal validation entry points, which may change in a later release. No linter is configured.
 
 ## Remove
 
