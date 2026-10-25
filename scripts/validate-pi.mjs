@@ -1,0 +1,43 @@
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+// Keep the browser/static package dependency-free. Install Pi only in tmp/.
+// These internal entry points intentionally track the latest Pi release.
+const piRoot = new URL('../tmp/pi-validation/node_modules/@earendil-works/pi-coding-agent/', import.meta.url);
+const installed = JSON.parse(readFileSync(new URL('package.json', piRoot), 'utf8'));
+const latest = execFileSync(process.platform === 'win32' ? 'npm.cmd' : 'npm',
+  ['view', '@earendil-works/pi-coding-agent@latest', 'version'],
+  { encoding: 'utf8', timeout: 30000, shell: process.platform === 'win32' }).trim();
+assert.equal(installed.version, latest, 'Refresh tmp/pi-validation with the README install command');
+const { validateThemeJson } = await import(new URL('dist/modes/interactive/theme/theme-schema.js', piRoot));
+const { loadThemeFromPath, setThemeJsonValidator } = await import(new URL('dist/modes/interactive/theme/theme.js', piRoot));
+setThemeJsonValidator(validateThemeJson);
+
+function checkTheme(path) {
+  const json = JSON.parse(readFileSync(path, 'utf8'));
+  validateThemeJson(path, json);
+  assert.throws(() => validateThemeJson('invalid', { ...json, colors: {} }));
+  const theme = loadThemeFromPath(path);
+  assert.equal(theme.name, json.name);
+  assert.equal(typeof theme.fg('text', 'validation'), 'string');
+  assert.equal(typeof theme.bg('userMessageBg', 'validation'), 'string');
+  console.log(`Pi ${installed.version}: schema and loader passed for ${json.name}`);
+}
+
+const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+assert.equal(pkg.pi.themes.length, 1);
+for (const file of pkg.pi.themes) checkTheme(fileURLToPath(new URL(`../${file}`, import.meta.url)));
+
+const { loadExtensions } = await import(new URL('dist/core/extensions/loader.js', piRoot));
+const extensionPaths = pkg.pi.extensions.map(file => fileURLToPath(new URL(`../${file}`, import.meta.url)));
+const result = await loadExtensions(extensionPaths, fileURLToPath(new URL('../', import.meta.url)));
+assert.deepEqual(result.errors, []);
+assert.deepEqual(result.warnings, []);
+assert.equal(result.extensions.length, extensionPaths.length);
+for (const extension of result.extensions) {
+  assert.equal(extension.handlers.get('session_start')?.length, 1);
+  assert.equal(extension.handlers.get('session_shutdown')?.length, 1);
+}
+console.log('Pi extension loader registered both lifecycle handlers; no interactive terminal session was run.');
