@@ -17,9 +17,11 @@ const latest = execFileSync(process.execPath,
   [npmCli, 'view', '@earendil-works/pi-coding-agent@latest', 'version'],
   { encoding: 'utf8', timeout: 30000 }).trim();
 assert.equal(installed.version, latest, 'Validation SDK does not match the latest npm release');
-assert.ok(process.env.PI_EVERGREEN_PI_BIN, 'PI_EVERGREEN_PI_BIN must identify the supplied global CLI');
-assert.equal(execFileSync(process.env.PI_EVERGREEN_PI_BIN, ['--version'],
-  { encoding: 'utf8', timeout: 10000 }).trim(), latest, 'Global CLI must match latest SDK');
+const piBin = process.env.EVERGREEN_PI_BIN || 'pi';
+assert.equal(execFileSync(piBin, ['--version'],
+  { encoding: 'utf8', timeout: 60000, stdio: ['ignore', 'pipe', 'pipe'] }).trim(), latest,
+  'Global CLI must match latest SDK');
+process.env.PI_OFFLINE = '1';
 // These internal validation entry points intentionally track the latest Pi.
 const { validateThemeJson } = await import(new URL('dist/modes/interactive/theme/theme-schema.js', piRoot));
 const { loadThemeFromPath, setThemeJsonValidator } = await import(new URL('dist/modes/interactive/theme/theme.js', piRoot));

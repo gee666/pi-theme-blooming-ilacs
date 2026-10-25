@@ -115,17 +115,22 @@ pi update --extensions
 
 ## Tests
 
-Run `npm test` with Node.js 22.19 or newer. Tests cover the emitted colour
-sequences, active-theme changes, non-interactive modes, cleanup, the Windows
-Terminal scheme and the opt-in truecolor configuration command.
-Run `npm run test:e2e` with Python 3 on a POSIX host and
-`PI_EVERGREEN_PI_BIN` pointing to the installed global Pi executable. It runs
-real CLI sessions in pseudo-terminals, checking exact OSC bytes, RGB text,
-theme switches, session replacement, reload, both exit paths and noninteractive
-output. A negative control verifies that removing the extension is detected.
-Artifacts stay under ignored `tmp/theme-e2e-*`. No model calls or credentials
-are needed. Actual emulator appearance and reset handling still need a visual
-check in your terminal.
+Run `npm run test:evergreen` with Node.js 22.19 or newer and Python 3 on a
+POSIX host. It runs syntax/type checks, unit tests, Pi SDK integration tests,
+and global CLI e2e tests. See [EVERGREEN.md](EVERGREEN.md) for intent and coverage.
+Set `EVERGREEN_PI_BIN` to the installed global Pi executable (default: `pi` on
+PATH). `EVERGREEN_E2E_MODEL` supplies the model selection; these theme tests make
+no model calls and need no credentials.
+
+Unit tests cover exact OSC sequences, active-theme changes, cleanup, the Windows
+Terminal scheme and opt-in truecolor setup. Integration tests load the package
+through Pi's resource loader and protect its palette, theme following and reload
+cleanup. E2e tests start RPC, JSON and print sessions with terminal and redirected
+stdout, ensuring no terminal color controls leak into noninteractive output.
+Pi always receives `/dev/null` stdin. This prevents interactive CLI testing, so
+interactive lifecycle coverage uses the SDK with a substituted terminal boundary.
+Artifacts stay under ignored `tmp/theme-e2e-*`. Real emulator appearance, keyboard
+flows and exit/reset handling still need manual interactive checks.
 
 ## Pi compatibility and validation
 
@@ -133,16 +138,19 @@ Only the latest stable `@earendil-works/pi-coding-agent` release is a test targe
 
 Tested against Pi 1.4.0
 
-Validation used the global Pi 1.4.0 CLI and its matching SDK on Node.js 24.16.0. Automated checks cover eight terminal/background unit tests, five truecolor configuration tests, JavaScript syntax, strict extension typechecking, theme schema/loading and extension registration. Typechecking skips dependency declaration checks. Real CLI pseudo-terminal tests passed in regular and fullscreen modes, including `/new`, `/reload`, active-theme changes, failed theme selection, orderly shutdown and process-exit cleanup. RPC, JSON and print startup with TTY stdout emitted no extension color controls. These tests inspect actual output bytes and lifecycle events, not visual emulator behavior.
+Evergreen validation uses the global Pi 1.4.0 CLI and its matching SDK. It covers
+eight terminal/background unit tests, five truecolor configuration tests,
+JavaScript syntax, strict extension typechecking, theme schema/loading, package
+resource discovery, SDK lifecycle dispatch and noninteractive CLI output.
+Typechecking skips dependency declaration checks. These checks inspect color
+values, actual output bytes and lifecycle events, not visual emulator behavior.
 
 The peer dependency minimum is `>=1.4.0`, the version checked here, rather than an unbounded wildcard. That floor does not mean every later release has been tested. Only the latest stable release is a test target.
 
-Use Node.js 22.19 or newer for Pi 1.4.0 validation. Provision the latest matching Pi SDK, TypeScript and Node types under `tmp/pi-validation/node_modules` for development validation. Tests never install another CLI runtime. Set `PI_EVERGREEN_PI_BIN` to the supplied global executable; the validator checks both its version and the SDK version against npm's latest release. `npm test` validates SDK loading, runs strict extension typechecking, and then runs the unit tests. Nothing is installed as a shipped runtime dependency:
+Use Node.js 22.19 or newer for Pi 1.4.0 validation. Provision the latest matching Pi SDK, TypeScript and Node types under `tmp/pi-validation/node_modules` for development validation. Tests never install another CLI runtime. Set `EVERGREEN_PI_BIN` to the supplied global executable (or leave it unset to use `pi` on PATH); the validator checks both its version and the SDK version against npm's latest release. `npm test` validates SDK loading, runs strict extension typechecking, and then runs the unit tests. Nothing is installed as a shipped runtime dependency:
 
 ```sh
-npm test
-npm run check
-npm run test:e2e
+npm run test:evergreen
 ```
 
 Use `npm run test:unit` for the dependency-free unit-only check. `test:pi` needs registry access for its version check and uses Pi's internal validation entry points, which may change in a later release. These are SDK-only checks; all end-to-end sessions use the global CLI. No linter or build step is configured.
