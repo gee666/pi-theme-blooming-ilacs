@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 // npm provides its CLI path on every supported platform, including Windows.
@@ -8,20 +8,18 @@ import { fileURLToPath } from 'node:url';
 const npmCli = process.env.npm_execpath;
 assert.ok(npmCli, 'Run this validator with npm run test:pi');
 const prefix = new URL('../tmp/pi-validation/', import.meta.url);
-mkdirSync(prefix, { recursive: true });
-execFileSync(process.execPath, [
-  npmCli, 'install', '--prefix', fileURLToPath(prefix),
-  '--no-save', '--package-lock=false', '--ignore-scripts',
-  '@earendil-works/pi-coding-agent@latest',
-  'typescript@latest', '@types/node@latest',
-], { stdio: 'inherit', timeout: 180000 });
+// SDK-only validation: never install or execute a second Pi runtime here.
+// Provision the SDK, TypeScript and Node types under tmp/pi-validation beforehand.
 
 const piRoot = new URL('node_modules/@earendil-works/pi-coding-agent/', prefix);
 const installed = JSON.parse(readFileSync(new URL('package.json', piRoot), 'utf8'));
 const latest = execFileSync(process.execPath,
   [npmCli, 'view', '@earendil-works/pi-coding-agent@latest', 'version'],
   { encoding: 'utf8', timeout: 30000 }).trim();
-assert.equal(installed.version, latest, 'Installed Pi does not match the latest npm release');
+assert.equal(installed.version, latest, 'Validation SDK does not match the latest npm release');
+assert.ok(process.env.PI_EVERGREEN_PI_BIN, 'PI_EVERGREEN_PI_BIN must identify the supplied global CLI');
+assert.equal(execFileSync(process.env.PI_EVERGREEN_PI_BIN, ['--version'],
+  { encoding: 'utf8', timeout: 10000 }).trim(), latest, 'Global CLI must match latest SDK');
 // These internal validation entry points intentionally track the latest Pi.
 const { validateThemeJson } = await import(new URL('dist/modes/interactive/theme/theme-schema.js', piRoot));
 const { loadThemeFromPath, setThemeJsonValidator } = await import(new URL('dist/modes/interactive/theme/theme.js', piRoot));
@@ -42,9 +40,16 @@ const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url),
 assert.equal(pkg.pi.themes.length, 1);
 for (const file of pkg.pi.themes) checkTheme(fileURLToPath(new URL(`../${file}`, import.meta.url)));
 
-const { loadExtensions } = await import(new URL('dist/core/extensions/loader.js', piRoot));
+const { discoverAndLoadExtensions } = await import(new URL('dist/index.js', piRoot));
 const extensionPaths = pkg.pi.extensions.map(file => fileURLToPath(new URL(`../${file}`, import.meta.url)));
-const result = await loadExtensions(extensionPaths, fileURLToPath(new URL('../', import.meta.url)));
+const isolated = mkdtempSync(fileURLToPath(new URL('../tmp/loader-', import.meta.url)));
+mkdirSync(`${isolated}/agent`);
+let result;
+try {
+  result = await discoverAndLoadExtensions(extensionPaths, isolated, `${isolated}/agent`);
+} finally {
+  rmSync(isolated, { recursive: true, force: true });
+}
 assert.deepEqual(result.errors, []);
 assert.deepEqual(result.warnings, []);
 assert.equal(result.extensions.length, extensionPaths.length);

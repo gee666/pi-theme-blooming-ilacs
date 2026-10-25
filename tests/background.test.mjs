@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, mkdirSync, mkdtempSync, copyFileSync, writeFileSync, rmSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 import { test } from "node:test";
 import extension from "../extensions/blooming-ilacs-background.ts";
 
@@ -7,7 +8,7 @@ const ST = "\x1b\\";
 const APPLY = `\x1b]11;rgb:11/11/11${ST}\x1b]10;rgb:BD/AE/9D${ST}\x1b]12;rgb:EA/21/75${ST}`;
 const RESET = `\x1b]111${ST}\x1b]110${ST}\x1b]112${ST}`;
 
-function harness(run) {
+function harness(run, factory = extension) {
   const hooks = new Map();
   const output = [];
   const timers = new Set();
@@ -26,7 +27,7 @@ function harness(run) {
   globalThis.clearInterval = (timer) => timers.delete(timer);
   const ctx = { hasUI: true, mode: "tui", ui: { theme: { name: "blooming-ilacs-pi" } } };
   try {
-    extension({ on: (name, handler) => hooks.set(name, handler) });
+    factory({ on: (name, handler) => hooks.set(name, handler) });
     run({
       output, timers, ctx,
       start: () => hooks.get("session_start")({}, ctx),
@@ -135,5 +136,43 @@ test("Windows Terminal defaults match Pi's background and dimmer text", () => {
   for (const name of palette) {
     assert.match(scheme[name], /^#[0-9a-f]{6}$/i);
     assert.match(scheme[`bright${name[0].toUpperCase()}${name.slice(1)}`], /^#[0-9a-f]{6}$/i);
+  }
+});
+
+
+test("missing or malformed bundled palette fails closed without terminal writes", async () => {
+  for (const contents of [undefined, "{invalid", "null"]) {
+    const directory = mkdtempSync(new URL("../tmp/palette-", import.meta.url));
+    try {
+      mkdirSync(`${directory}/extensions`);
+      copyFileSync(new URL("../extensions/blooming-ilacs-background.ts", import.meta.url), `${directory}/extensions/background.ts`);
+      if (contents !== undefined) writeFileSync(`${directory}/blooming-ilacs-pi.json`, contents);
+      const { default: factory } = await import(pathToFileURL(`${directory}/extensions/background.ts`));
+      harness(({ output, start, tick, stop }) => {
+        start();
+        tick();
+        stop();
+        assert.deepEqual(output, []);
+      }, factory);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  }
+});
+
+test("literal RGB and absent optional colors use safe palette defaults", async () => {
+  const directory = mkdtempSync(new URL("../tmp/palette-", import.meta.url));
+  try {
+    mkdirSync(`${directory}/extensions`);
+    copyFileSync(new URL("../extensions/blooming-ilacs-background.ts", import.meta.url), `${directory}/extensions/background.ts`);
+    writeFileSync(`${directory}/blooming-ilacs-pi.json`, JSON.stringify({ colors: { text: "#123456" } }));
+    const { default: factory } = await import(pathToFileURL(`${directory}/extensions/background.ts`));
+    harness(({ output, start, tick }) => {
+      start();
+      tick();
+      assert.deepEqual(output, [`\x1b]11;rgb:11/11/11${ST}\x1b]10;rgb:12/34/56${ST}\x1b]12;rgb:12/34/56${ST}`]);
+    }, factory);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
   }
 });

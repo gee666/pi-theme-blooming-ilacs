@@ -19,6 +19,7 @@
     }
   },
   "include": [
-    "extensions/**/*.ts"
+    "extensions/**/*.ts",
+    "tests/fixtures/**/*.ts"
   ]
 }

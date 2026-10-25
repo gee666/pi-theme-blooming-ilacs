@@ -118,9 +118,14 @@ pi update --extensions
 Run `npm test` with Node.js 22.19 or newer. Tests cover the emitted colour
 sequences, active-theme changes, non-interactive modes, cleanup, the Windows
 Terminal scheme and the opt-in truecolor configuration command.
-Visual checks still need a real terminal: start Pi, switch
-away from and back to this theme, then exit and check that terminal defaults
-are restored.
+Run `npm run test:e2e` with Python 3 on a POSIX host and
+`PI_EVERGREEN_PI_BIN` pointing to the installed global Pi executable. It runs
+real CLI sessions in pseudo-terminals, checking exact OSC bytes, RGB text,
+theme switches, session replacement, reload, both exit paths and noninteractive
+output. A negative control verifies that removing the extension is detected.
+Artifacts stay under ignored `tmp/theme-e2e-*`. No model calls or credentials
+are needed. Actual emulator appearance and reset handling still need a visual
+check in your terminal.
 
 ## Pi compatibility and validation
 
@@ -128,18 +133,19 @@ Only the latest stable `@earendil-works/pi-coding-agent` release is a test targe
 
 Tested against Pi 1.4.0
 
-Validation used `@earendil-works/pi-coding-agent` 1.4.0 on Node.js 24.16.0. Automated checks cover the six mocked terminal/background tests, five truecolor configuration tests using temporary settings files, JavaScript syntax, strict extension typechecking against Pi 1.4.0's declarations, the theme JSON through Pi's actual schema validator and loader, and extension registration through Pi's actual extension loader. Typechecking skips dependency declaration checks. No interactive Pi session or real-terminal OSC/appearance check was run for this record; the manual checks above are still needed.
+Validation used the global Pi 1.4.0 CLI and its matching SDK on Node.js 24.16.0. Automated checks cover eight terminal/background unit tests, five truecolor configuration tests, JavaScript syntax, strict extension typechecking, theme schema/loading and extension registration. Typechecking skips dependency declaration checks. Real CLI pseudo-terminal tests passed in regular and fullscreen modes, including `/new`, `/reload`, active-theme changes, failed theme selection, orderly shutdown and process-exit cleanup. RPC, JSON and print startup with TTY stdout emitted no extension color controls. These tests inspect actual output bytes and lifecycle events, not visual emulator behavior.
 
 The peer dependency minimum is `>=1.4.0`, the version checked here, rather than an unbounded wildcard. That floor does not mean every later release has been tested. Only the latest stable release is a test target.
 
-Use Node.js 22.19 or newer for Pi 1.4.0 validation. `npm test` automatically installs the latest validation tools under ignored `tmp/`, validates Pi loading, runs strict extension typechecking, and then runs the unit tests. Nothing is installed as a shipped runtime dependency:
+Use Node.js 22.19 or newer for Pi 1.4.0 validation. Provision the latest matching Pi SDK, TypeScript and Node types under `tmp/pi-validation/node_modules` for development validation. Tests never install another CLI runtime. Set `PI_EVERGREEN_PI_BIN` to the supplied global executable; the validator checks both its version and the SDK version against npm's latest release. `npm test` validates SDK loading, runs strict extension typechecking, and then runs the unit tests. Nothing is installed as a shipped runtime dependency:
 
 ```sh
 npm test
 npm run check
+npm run test:e2e
 ```
 
-Use `npm run test:unit` for the dependency-free unit-only check. Both `npm test` and standalone `npm run test:pi` refresh the temporary install with `--ignore-scripts`; no manual setup is needed. Install and registry calls have timeouts and failures stop the check. The validator verifies the installed version against npm's latest release. These commands need registry access and use Pi's internal validation entry points, which may change in a later release. No linter is configured.
+Use `npm run test:unit` for the dependency-free unit-only check. `test:pi` needs registry access for its version check and uses Pi's internal validation entry points, which may change in a later release. These are SDK-only checks; all end-to-end sessions use the global CLI. No linter or build step is configured.
 
 ## Remove
 
