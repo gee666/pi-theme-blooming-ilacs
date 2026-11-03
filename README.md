@@ -136,18 +136,18 @@ flows and exit/reset handling still need manual interactive checks.
 
 Only the latest stable `@earendil-works/pi-coding-agent` release is a test target. Older Pi versions are not part of the test policy. Before every release, resolve `@latest` again, rerun the checks below, and update this record with the exact version actually checked and any validation limits.
 
-Tested against Pi 1.4.0
+Tested against Pi 1.5.0
 
-Evergreen validation uses the global Pi 1.4.0 CLI and its matching SDK. It covers
+Evergreen validation uses the global Pi 1.5.0 CLI and its matching SDK. It covers
 eight terminal/background unit tests, five truecolor configuration tests,
 JavaScript syntax, strict extension typechecking, theme schema/loading, package
 resource discovery, SDK lifecycle dispatch and noninteractive CLI output.
 Typechecking skips dependency declaration checks. These checks inspect color
 values, actual output bytes and lifecycle events, not visual emulator behavior.
 
-The peer dependency minimum is `>=1.4.0`, the version checked here, rather than an unbounded wildcard. That floor does not mean every later release has been tested. Only the latest stable release is a test target.
+The peer dependency minimum is `>=1.5.0`, the version checked here, rather than an unbounded wildcard. That floor does not mean every later release has been tested. Only the latest stable release is a test target.
 
-Use Node.js 22.19 or newer for Pi 1.4.0 validation. Provision the latest matching Pi SDK, TypeScript and Node types under `tmp/pi-validation/node_modules` for development validation. Tests never install another CLI runtime. Set `EVERGREEN_PI_BIN` to the supplied global executable (or leave it unset to use `pi` on PATH); the validator checks both its version and the SDK version against npm's latest release. `npm test` validates SDK loading, runs strict extension typechecking, and then runs the unit tests. Nothing is installed as a shipped runtime dependency:
+Use Node.js 22.19 or newer for Pi 1.5.0 validation. Provision the latest matching Pi SDK, TypeScript and Node types under `tmp/pi-validation/node_modules` for development validation. Tests never install another CLI runtime. Set `EVERGREEN_PI_BIN` to the supplied global executable (or leave it unset to use `pi` on PATH); the validator checks both its version and the SDK version against npm's latest release. `npm test` validates SDK loading, runs strict extension typechecking, and then runs the unit tests. Nothing is installed as a shipped runtime dependency:
 
 ```sh
 npm run test:evergreen
