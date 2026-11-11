@@ -54,12 +54,11 @@ All CLI spawns ignore stdin (`/dev/null`). Interactive behavior is SDK-tested wi
 an emulated terminal boundary, not claimed as interactive CLI e2e coverage.
 `EVERGREEN_E2E_MODEL` selects models; no model calls are needed for these tests.
 CLI artifacts are kept under ignored `tmp/theme-e2e-*`.
-## Pi 1.5.1 assessment
-The validation SDK and global CLI both pass on 1.5.1. Reload cleanup remains
-covered by SDK lifecycle tests. Overlay disposal/hidden-overlay OSC 7501 handling,
-active-tool disposal and internal cursor-marker clipping need no runtime changes:
-this extension creates no overlays or tools and writes only terminal color OSCs.
-The palette is unchanged.
+## Pi 1.5.2 assessment
+Refreshed the validation SDK from 1.5.1 to the latest release, 1.5.2, matching
+the global CLI. The full evergreen suite passes, including SDK lifecycle/reload
+cleanup and noninteractive CLI output. No relevant theme changelog changes were
+reported; no runtime or palette changes are needed.
 
 ## Relevant changelog topics
 Watch theme schema/tokens/color resolution, package discovery and extension loading,
