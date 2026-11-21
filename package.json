@@ -41,7 +41,7 @@
     "README.md"
   ],
   "peerDependencies": {
-    "@earendil-works/pi-coding-agent": ">=1.5.2"
+    "@earendil-works/pi-coding-agent": ">=1.6.0"
   },
   "engines": {
     "node": ">=22.19.0"

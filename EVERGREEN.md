@@ -54,11 +54,17 @@ All CLI spawns ignore stdin (`/dev/null`). Interactive behavior is SDK-tested wi
 an emulated terminal boundary, not claimed as interactive CLI e2e coverage.
 `EVERGREEN_E2E_MODEL` selects models; no model calls are needed for these tests.
 CLI artifacts are kept under ignored `tmp/theme-e2e-*`.
-## Pi 1.5.2 assessment
-Refreshed the validation SDK from 1.5.1 to the latest release, 1.5.2, matching
-the global CLI. The full evergreen suite passes, including SDK lifecycle/reload
-cleanup and noninteractive CLI output. No relevant theme changelog changes were
-reported; no runtime or palette changes are needed.
+## Pi 1.6.0 assessment
+Refreshed the validation SDK from 1.5.2 to 1.6.0, matching npm latest and the
+global CLI, resolving the SDK version assertion. The full evergreen suite passes,
+including SDK lifecycle/reload cleanup and noninteractive CLI output.
+Pi now drains queued stdout for up to one second on exit and restores/redraws
+its terminal on external TSTP/foreground resume. Our shutdown handler already
+queues OSC resets; no runtime changes are needed. Real interactive exit and
+suspend/resume remain manual checks, not covered by the noninteractive CLI tests.
+The unscoped syntax foreground fix improves contrasting tool cards upstream;
+no palette changes are needed. We render no components or cached arrays, so the
+readonly `render()` change does not apply.
 
 ## Relevant changelog topics
 Watch theme schema/tokens/color resolution, package discovery and extension loading,
