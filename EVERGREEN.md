@@ -66,6 +66,19 @@ The unscoped syntax foreground fix improves contrasting tool cards upstream;
 no palette changes are needed. We render no components or cached arrays, so the
 readonly `render()` change does not apply.
 
+## Pi 1.6.1 assessment
+Refreshed the ignored validation SDK from 1.6.0 to 1.6.1 to resolve the reported
+version mismatch; global CLI and npm latest both match. Updated the tested
+version and peer minimum. The full evergreen suite passes.
+First-time setup now shows a colored Pi logo and asks only about analytics;
+it no longer selects a theme. Pi defaults to `system`, following terminal colors.
+Installation instructions now explicitly direct users to select Blooming Ilacs.
+SDK integration covers startup on `system` without OSC writes, selecting Blooming
+Ilacs, and restoring terminal defaults when switching back to `system`.
+No runtime change is needed: the extension already follows the active theme name.
+The first-time setup screen and real terminal palette re-query remain manual
+checks, not covered by the substituted SDK terminal boundary.
+
 ## Relevant changelog topics
 Watch theme schema/tokens/color resolution, package discovery and extension loading,
 `session_start`/`session_shutdown` and reload ordering, UI theme/context modes,

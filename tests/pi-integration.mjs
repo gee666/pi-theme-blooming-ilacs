@@ -47,13 +47,17 @@ try {
   // Only the terminal boundary is substituted. Pi loads and dispatches the real extension.
   process.stdout.write = data => { output.push(String(data)); return true; };
   Object.defineProperty(process.stdout, 'isTTY', { configurable: true, value: true });
-  const uiContext = { theme: { name: theme.name } };
+  const uiContext = { theme: { name: 'system' } };
   const errors = [];
   await session.bindExtensions({ mode: 'tui', uiContext, onError: error => errors.push(error) });
+  await delay(300);
+  assert.deepEqual(output, [], 'Default system theme must leave terminal colors untouched');
+  uiContext.theme.name = theme.name;
+  await delay(300);
   assert.deepEqual(output, [APPLY]);
   await delay(300);
   assert.deepEqual(output, [APPLY], 'No repeated painting while the theme is unchanged');
-  uiContext.theme.name = 'dark';
+  uiContext.theme.name = 'system';
   await delay(300);
   assert.deepEqual(output, [APPLY, RESET]);
   uiContext.theme.name = theme.name;
