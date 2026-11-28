@@ -79,6 +79,13 @@ No runtime change is needed: the extension already follows the active theme name
 The first-time setup screen and real terminal palette re-query remain manual
 checks, not covered by the substituted SDK terminal boundary.
 
+## Pi 1.7.0 assessment
+Matched the validation SDK to the Pi 1.7.0 CLI and updated the tested version
+and peer minimum. The evergreen suite passes without theme or extension changes.
+Pi fixes remapped TUI key hints and now shuts down normally on Windows Ctrl+Break.
+The extension already resets terminal colors on shutdown; the Windows Ctrl+Break
+path itself remains a manual check.
+
 ## Relevant changelog topics
 Watch theme schema/tokens/color resolution, package discovery and extension loading,
 `session_start`/`session_shutdown` and reload ordering, UI theme/context modes,
